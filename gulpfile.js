@@ -1,9 +1,9 @@
-var gulp      = require('gulp'),
-    uglify 		= require('gulp-uglify'),
-    concat 		= require('gulp-concat'),
-    rename  	= require('gulp-rename'),
+var gulp = require('gulp'),
+    uglify = require('gulp-uglify'),
+    concat = require('gulp-concat'),
+    rename = require('gulp-rename'),
     minifyCSS = require('gulp-minify-css'),
-    flatten 	= require('gulp-flatten'); // gets the absolute path
+    flatten = require('gulp-flatten'); // gets the absolute path
 
 // concat all js files to scripts.js and minifies to scripts.min.css
 gulp.task('js', function () {
