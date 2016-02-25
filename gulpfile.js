@@ -1,53 +1,158 @@
-var gulp = require('gulp'),
-    uglify = require('gulp-uglify'),
-    concat = require('gulp-concat'),
-    rename = require('gulp-rename'),
-    minifyCSS = require('gulp-minify-css'),
-    flatten = require('gulp-flatten'); // gets the absolute path
+// ---------------------------------------------------------------
+// Plugins
+// ---------------------------------------------------------------
 
-// concat all js files to scripts.js and minifies to scripts.min.css
-gulp.task('js', function () {
-	return gulp.src([
-   		'wp-includes/**/*.js',
-   		'wp-content/**/*.js'
-   	])
-   	.pipe(concat('scripts.js'))
+var gulp			= require('gulp'),
+	uglify			= require('gulp-uglify'),
+	concat			= require('gulp-concat'),
+	rename			= require('gulp-rename'),
+	cleanCss		= require('gulp-clean-css'),
+	flatten			= require('gulp-flatten'), // remove or replace relative path for files
+	replace			= require('gulp-replace'), 
+	imagemin		= require('gulp-imagemin'),
+	pngquant		= require('imagemin-pngquant');
+
+
+// ---------------------------------------------------------------
+// Setting Sources - Destinations
+// ---------------------------------------------------------------
+
+// Base Paths
+var basePaths = {
+	src_A: 'wp-includes/',
+	src_B: 'wp-content/',
+	dest: 'assets/'
+};
+
+// Source Paths
+var srcPathsJS = ([
+	basePaths.src_A + '**/*.js',
+	basePaths.src_B + '**/*.js'
+]);
+
+var srcPathsCSS = ([
+	basePaths.src_A + '**/*.css',
+	basePaths.src_B + '**/*.css'
+]);
+
+var srcPathsFonts = ([
+	basePaths.src_A + '**/*.{eot,svg,ttf,woff,woff2}',
+	basePaths.src_B + '**/*.{eot,svg,ttf,woff,woff2}'
+]);
+
+var srcPathsImg = ([
+	basePaths.src_A + '**/*.{gif,jpeg,jpg,png}',
+	basePaths.src_B + '**/*.{gif,jpeg,jpg,png}'
+]);
+
+// Destination Paths
+var destPathJS = basePaths.dest + 'js/';
+var destPathCSS = basePaths.dest + 'css/';
+var destPathFonts = basePaths.dest + 'fonts/';
+var destPathImg = basePaths.dest + 'images/';
+
+
+// ---------------------------------------------------------------
+// Error Handler
+// ---------------------------------------------------------------
+
+function errorLog(err) {
+	console.error(err.toString());
+	this.emit('end');
+}
+
+
+// ---------------------------------------------------------------
+// Task: dev-js
+// ---------------------------------------------------------------
+
+gulp.task('dev-js', function () {
+	return gulp.src(srcPathsJS)
+	// .pipe(concat('scripts.js'))
 	// .pipe(uglify())
 	// .pipe(rename('scripts.min.js'))
-	.pipe(gulp.dest('assets/js'));
+	.pipe(flatten())
+	.on('error', errorLog)
+    .pipe(gulp.dest(destPathJS));
 });
 
-// concat all css files to style.css then minifies to style.min.css
-gulp.task('css',function(){
-	return gulp.src([
-		'wp-content/**/*.css'
-  	])
-    .pipe(concat('style.css'))
-    // .pipe(minifyCSS())
-    // .pipe(rename('style.min.css'))
-    .pipe(gulp.dest('assets/css'))
+
+// ---------------------------------------------------------------
+// Task: dev-css
+// ---------------------------------------------------------------
+
+gulp.task('dev-css',function(){
+	return gulp.src(srcPathsCSS)
+	.pipe(concat('style.css'))
+	.pipe(cleanCss({debug: true, processImport: false}))
+	.pipe(rename('style.min.css'))
+	.on('error', errorLog)
+	.pipe(gulp.dest(destPathCSS))
 });
 
-// Get all Font files to assets/fonts
-gulp.task('fonts', function() {
-    return gulp.src([
-    	'wp-content/**/fonts/*.{eot,svg,ttf,woff,woff2}',
-    	'wp-includes/**/fonts/*.{eot,svg,ttf,woff,woff2}'
-    ])
-    .pipe(flatten())
-    .pipe(gulp.dest('assets/fonts'));
+
+// ---------------------------------------------------------------
+// Task: dev-fonts
+// ---------------------------------------------------------------
+
+gulp.task('dev-fonts', function() {
+	return gulp.src(srcPathsFonts)
+	.pipe(flatten())
+	.on('error', errorLog)
+	.pipe(gulp.dest(destPathFonts));
 });
+
+
+// ---------------------------------------------------------------
+// Task: dev-img
+// ---------------------------------------------------------------
+
+gulp.task('dev-img', function() {
+	return gulp.src(srcPathsImg)
+	.pipe(flatten())
+	.pipe(imagemin({
+            progressive: false,
+            svgoPlugins: [
+                {removeViewBox: false},
+                {cleanupIDs: false}
+            ],
+            use: [pngquant()]
+        }))
+	.on('error', errorLog)
+	.pipe(gulp.dest(destPathImg));
+});
+
+
+// ---------------------------------------------------------------
+// Task: href-replace
+// ---------------------------------------------------------------
+
+gulp.task('hr', function() {
+	return gulp.src('index_.html')
+    .pipe(replace(/src="([^"]*)"/g, 'src="<?=$_SESSION[\'siteUrl\']?>\'$1\'"'))
+    .pipe(replace(/href="([^"]*)"/g, 'href="$$href(\'$1\')"'))
+    .on('error', errorLog)
+    .pipe(gulp.dest('dist'));
+});
+
+// ---------------------------------------------------------------
+// Task: Watch
+// ---------------------------------------------------------------
 
 // global watcher task to do all the magical stuff
 // gulp.task('watch',function(){
-// 	gulp.watch('./dev/js/*.js',['lint','js']);
-// 	gulp.watch('./dev/css/*.css',['css']);
+// gulp.watch('./dev/js/*.js',['lint','js']);
+// gulp.watch('./dev/css/*.css',['css']);
 // });
 
-// gulp default task (runs all individual tasks, then kicks off the watcher task)
+
+// ---------------------------------------------------------------
+// Default
+// ---------------------------------------------------------------
+
 gulp.task('default', [
-	'js',
-	'css',
-	'fonts'
+	'dev-js',
+	'dev-css',
+	'dev-fonts'
 	// 'watch'
 ]);
