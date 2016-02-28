@@ -2,15 +2,18 @@
 // Plugins
 // ---------------------------------------------------------------
 
-var gulp			= require('gulp'),
-	uglify			= require('gulp-uglify'),
-	concat			= require('gulp-concat'),
-	rename			= require('gulp-rename'),
-	cleanCss		= require('gulp-clean-css'),
-	flatten			= require('gulp-flatten'), // remove or replace relative path for files
-	replace			= require('gulp-replace'), 
-	imagemin		= require('gulp-imagemin'),
-	pngquant		= require('imagemin-pngquant');
+var gulp		= require('gulp'),
+	uglify		= require('gulp-uglify'),
+	// concat		= require('gulp-concat'),
+	cleanCss	= require('gulp-clean-css'),
+	flatten		= require('gulp-flatten'), // remove or replace relative path for files
+	replace		= require('gulp-replace'), 
+	imagemin	= require('gulp-imagemin'),
+	pngquant	= require('imagemin-pngquant'),
+	usemin		= require('gulp-usemin'),
+	debug		= require('gulp-debug'),
+	beautify	= require('gulp-jsbeautifier'),
+	importCss	= require('gulp-import-css');
 
 
 // ---------------------------------------------------------------
@@ -53,41 +56,23 @@ var destPathImg = basePaths.dest + 'images/';
 
 
 // ---------------------------------------------------------------
-// Error Handler
-// ---------------------------------------------------------------
-
-function errorLog(err) {
-	console.error(err.toString());
-	this.emit('end');
-}
-
-
-// ---------------------------------------------------------------
 // Task: dev-js
 // ---------------------------------------------------------------
 
-gulp.task('dev-js', function () {
-	return gulp.src(srcPathsJS)
-	// .pipe(concat('scripts.js'))
-	// .pipe(uglify())
-	// .pipe(rename('scripts.min.js'))
-	.pipe(flatten())
-	.on('error', errorLog)
-    .pipe(gulp.dest(destPathJS));
-});
-
-
-// ---------------------------------------------------------------
-// Task: dev-css
-// ---------------------------------------------------------------
-
-gulp.task('dev-css',function(){
-	return gulp.src(srcPathsCSS)
-	.pipe(concat('style.css'))
-	.pipe(cleanCss({debug: true, processImport: false}))
-	.pipe(rename('style.min.css'))
-	.on('error', errorLog)
-	.pipe(gulp.dest(destPathCSS))
+// Include in html->CSS and JS sources:
+// <!-- build:css css/styles.css -->
+// <!-- endbuild -->
+// <!-- build:js js/scripts.js -->
+// <!-- endbuild -->
+gulp.task('dev-assets', function () {
+	// return gulp.src(srcPathsJS, {base: './'})
+	return gulp.src('index.html')
+		.pipe(usemin({
+			js: [beautify()],
+			css: [beautify(), importCss(), 'concat' ]
+		}))
+		.pipe(debug())
+		.pipe(gulp.dest(basePaths.dest));
 });
 
 
@@ -98,7 +83,7 @@ gulp.task('dev-css',function(){
 gulp.task('dev-fonts', function() {
 	return gulp.src(srcPathsFonts)
 	.pipe(flatten())
-	.on('error', errorLog)
+	.pipe(debug())
 	.pipe(gulp.dest(destPathFonts));
 });
 
@@ -118,7 +103,7 @@ gulp.task('dev-img', function() {
             ],
             use: [pngquant()]
         }))
-	.on('error', errorLog)
+	.pipe(debug())
 	.pipe(gulp.dest(destPathImg));
 });
 
@@ -127,13 +112,14 @@ gulp.task('dev-img', function() {
 // Task: href-replace
 // ---------------------------------------------------------------
 
-gulp.task('hr', function() {
-	return gulp.src('index_.html')
-    .pipe(replace(/src="([^"]*)"/g, 'src="<?=$_SESSION[\'siteUrl\']?>\'$1\'"'))
-    .pipe(replace(/href="([^"]*)"/g, 'href="$$href(\'$1\')"'))
-    .on('error', errorLog)
-    .pipe(gulp.dest('dist'));
-});
+// gulp.task('hr', function() {
+// 	return gulp.src('index_.html')
+//     .pipe(replace(/src="([^"]*)"/g, 'src="<?=$_SESSION[\'siteUrl\']?>\'$1\'"'))
+//     .pipe(replace(/href="([^"]*)"/g, 'href="$$href(\'$1\')"'))
+//     .pipe(debug())
+//     .pipe(gulp.dest('dist'));
+// });
+
 
 // ---------------------------------------------------------------
 // Task: Watch
@@ -151,8 +137,8 @@ gulp.task('hr', function() {
 // ---------------------------------------------------------------
 
 gulp.task('default', [
-	'dev-js',
-	'dev-css',
-	'dev-fonts'
+	'dev-assets',
+	'dev-fonts',
+	'dev-img'
 	// 'watch'
 ]);
