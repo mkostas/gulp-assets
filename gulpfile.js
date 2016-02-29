@@ -3,11 +3,13 @@
 // ---------------------------------------------------------------
 
 var gulp		= require('gulp'),
-	uglify		= require('gulp-uglify'),
+	uglify		= require('gulp-uglify'),		// minify js
 	// concat		= require('gulp-concat'),
-	cleanCss	= require('gulp-clean-css'),
-	flatten		= require('gulp-flatten'), // remove or replace relative path for files
-	replace		= require('gulp-replace'), 
+	cleanCss	= require('gulp-clean-css'),	// minify css
+	flatten		= require('gulp-flatten'),		// remove or replace relative path for files
+	replace		= require('gulp-replace'),		// eg. replace(/src="([^"]*)"/g, 'src="<?=$_SESSION[\'siteUrl\']?>\'$1\'"')
+	rename		= require('gulp-rename'),		// rename a file
+	rev			= require('gulp-rev'),			// revision ccs or js
 	imagemin	= require('gulp-imagemin'),
 	pngquant	= require('imagemin-pngquant'),
 	usemin		= require('gulp-usemin'),
@@ -56,7 +58,7 @@ var destPathImg = basePaths.dest + 'images/';
 
 
 // ---------------------------------------------------------------
-// Task: dev-js
+// Task: dev-css-js
 // ---------------------------------------------------------------
 
 // Include in html->CSS and JS sources:
@@ -64,7 +66,7 @@ var destPathImg = basePaths.dest + 'images/';
 // <!-- endbuild -->
 // <!-- build:js js/scripts.js -->
 // <!-- endbuild -->
-gulp.task('dev-assets', function () {
+gulp.task('dev-css-js', function () {
 	// return gulp.src(srcPathsJS, {base: './'})
 	return gulp.src('index.html')
 		.pipe(usemin({
@@ -109,6 +111,32 @@ gulp.task('dev-img', function() {
 
 
 // ---------------------------------------------------------------
+// Task: build-css
+// ---------------------------------------------------------------
+
+gulp.task('build-css', function() {
+	return gulp.src(destPathCSS + 'styles.css')
+	.pipe(cleanCss())
+	.pipe(debug())
+	.pipe(rename('styles.min.css'))
+	.pipe(gulp.dest(destPathCSS));
+});
+
+
+// ---------------------------------------------------------------
+// Task: build-js
+// ---------------------------------------------------------------
+
+gulp.task('build-js', function() {
+	return gulp.src(destPathJS + 'scripts.js')
+	.pipe(uglify())
+	.pipe(debug())
+	.pipe(rename('scripts.min.js'))
+	.pipe(gulp.dest(destPathJS));
+});
+
+
+// ---------------------------------------------------------------
 // Task: href-replace
 // ---------------------------------------------------------------
 
@@ -133,12 +161,20 @@ gulp.task('dev-img', function() {
 
 
 // ---------------------------------------------------------------
-// Default
+// Dev-assets
 // ---------------------------------------------------------------
 
-gulp.task('default', [
-	'dev-assets',
+gulp.task('dev-assets', [
+	'dev-css-js',
 	'dev-fonts',
 	'dev-img'
-	// 'watch'
+]);
+
+// ---------------------------------------------------------------
+// Build-assets
+// ---------------------------------------------------------------
+
+gulp.task('build-assets', [
+	'build-css',
+	'build-js'
 ]);
