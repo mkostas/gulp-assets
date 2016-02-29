@@ -3,13 +3,12 @@
 // ---------------------------------------------------------------
 
 var gulp		= require('gulp'),
-	uglify		= require('gulp-uglify'),		// minify js
+	uglify		= require('gulp-uglify'), // minify js
 	// concat		= require('gulp-concat'),
-	cleanCss	= require('gulp-clean-css'),	// minify css
-	flatten		= require('gulp-flatten'),		// remove or replace relative path for files
-	replace		= require('gulp-replace'),		// eg. replace(/src="([^"]*)"/g, 'src="<?=$_SESSION[\'siteUrl\']?>\'$1\'"')
-	rename		= require('gulp-rename'),		// rename a file
-	rev			= require('gulp-rev'),			// revision ccs or js
+	cleanCss	= require('gulp-clean-css'), // minify css
+	flatten		= require('gulp-flatten'), // remove or replace relative path for files
+	replace		= require('gulp-replace'), // eg. replace(/src="([^"]*)"/g, 'src="<?=$_SESSION[\'siteUrl\']?>\'$1\'"')
+	rename		= require('gulp-rename'), // rename a file
 	imagemin	= require('gulp-imagemin'),
 	pngquant	= require('imagemin-pngquant'),
 	usemin		= require('gulp-usemin'),
